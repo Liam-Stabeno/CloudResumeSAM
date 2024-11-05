@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Cloud Resume Challege App - Updates DynamoDB table with a count of the total visitors that have visited an index.html page hosted in an S3
+Resources:
+  LambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: 'Lambda function updates data in DynamoDB table while retrieving the total amount of visitors'
+      # Architectures:
+      # - arm64
+      FunctionName: VisitorDataFunction
+      CodeUri: ./visitor_data
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref DynamoDBTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref DynamoDBTable
+      Events:
+        HttpApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: ANY
+            ApiId: !Ref VisitorDataHttpApi
+  VisitorDataHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowHeaders:
+        - 'content-type'
+        AllowMethods:
+        - GET
+        - POST
+        - OPTIONS
+        AllowOrigins:
+        - '*'
+  DynamoDBTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: PageVisits2
+      PrimaryKey:
+        Name: PageId
+        Type: String
