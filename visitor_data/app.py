@@ -1,6 +1,7 @@
 import json
 import uuid
 import boto3
+import os
 from boto3.dynamodb.conditions import Key
 from datetime import datetime
 
@@ -8,9 +9,9 @@ from datetime import datetime
 
 def lambda_handler(event, context):
     dynamodb = boto3.resource("dynamodb")
-    table = dynamodb.Table("PageVisits2")
+    table = os.environ['DYNAMODB_TABLE_NAME']
     method = event.get('httpMethod')
-
+    print(f"Tablename : {table}")
     if method == 'POST':
         page_id = str(uuid.uuid4())
         current_timestamp = datetime.now().isoformat()
