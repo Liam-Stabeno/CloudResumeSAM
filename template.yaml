@@ -6,8 +6,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Description: 'Lambda function updates data in DynamoDB table while retrieving the total amount of visitors'
-      # Architectures:  Add this back when moving into Prod
-      # - arm64
+      Architectures:
+      - arm64
       FunctionName: !Sub "${AWS::StackName}-VisitorDataFunction"
       CodeUri: ./visitor_data
       Handler: app.lambda_handler
@@ -32,8 +32,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Description: 'Lambda function inserts the first item into DynamoDB table'
-      # Architectures:  Add this back when moving into Prod
-      # - arm64
+      Architectures:
+      - arm64
       FunctionName: !Sub "${AWS::StackName}-InsertFirstItemFunction"
       CodeUri: ./insert_first_item
       Handler: app.lambda_handler
@@ -49,8 +49,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Description: 'Lambda function injects then uploads static content to S3'
-      # Architectures:  Add this back when moving into Prod
-      # - arm64
+      Architectures:
+      - arm64
       FunctionName: !Sub "${AWS::StackName}-InjectThenUploadStaticContentFunction"
       CodeUri: ./inject_then_upload_static_content
       Handler: app.lambda_handler
@@ -121,7 +121,7 @@ Resources:
 Outputs:
   APIEndpoint:
     Value: !Sub "https://${VisitorDataHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"
-  S3HostingBucket:
-    Value: !Ref S3HostingBucket
+  S3HostingBucketName:
+    Value: !Sub "${S3HostingBucket}.s3-website-${AWS::Region}.amazonaws.com"
   BucketWebsiteURL:
     Value: !Sub "http://${S3HostingBucket}.s3-website-${AWS::Region}.amazonaws.com"
