@@ -8,8 +8,10 @@ from datetime import datetime
 
 
 def lambda_handler(event, context):
+    tableName = os.environ['DYNAMODB_TABLE_NAME']
     dynamodb = boto3.resource("dynamodb")
-    table = os.environ['DYNAMODB_TABLE_NAME']
+    table = dynamodb.Table(tableName)
+    
     method = event.get('httpMethod')
     print(f"Tablename : {table}")
     if method == 'POST':

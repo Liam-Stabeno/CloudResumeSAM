@@ -8,7 +8,7 @@ Resources:
       Description: 'Lambda function updates data in DynamoDB table while retrieving the total amount of visitors'
       # Architectures:  Add this back when moving into Prod
       # - arm64
-      FunctionName: VisitorDataFunction
+      FunctionName: !Sub "${AWS::StackName}-VisitorDataFunction"
       CodeUri: ./visitor_data
       Handler: app.lambda_handler
       Runtime: python3.12
@@ -27,22 +27,35 @@ Resources:
       Environment:
         Variables:
           DYNAMODB_TABLE_NAME: !Ref DynamoDBTable
+          
   InsertFirstItemLambda:
     Type: AWS::Serverless::Function
     Properties:
       Description: 'Lambda function inserts the first item into DynamoDB table'
       # Architectures:  Add this back when moving into Prod
       # - arm64
-      FunctionName: InsertFirstItemFunction
+      FunctionName: !Sub "${AWS::StackName}-InsertFirstItemFunction"
       CodeUri: ./insert_first_item
       Handler: app.lambda_handler
       Runtime: python3.12
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref DynamoDBTable
-      Environment:
-        Variables:
-          DYNAMODB_TABLE_NAME: !Ref DynamoDBTable
+
+  InjectThenUploadStaticContentLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: 'Lambda function injects then uploads static content to S3'
+      # Architectures:  Add this back when moving into Prod
+      # - arm64
+      FunctionName: !Sub "${AWS::StackName}-InjectThenUploadStaticContentFunction"
+      CodeUri: ./inject_then_upload_static_content
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Policies:
+        - S3WritePolicy:
+            BucketName: !Ref S3HostingBucket
+
   VisitorDataHttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
@@ -55,6 +68,8 @@ Resources:
         - OPTIONS
         AllowOrigins:
         - '*'
+
+  
   DynamoDBTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
@@ -62,8 +77,32 @@ Resources:
       PrimaryKey:
         Name: PageId
         Type: String
+
+  S3HostingBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-s3-hosting-bucket"
+      WebsiteConfiguration:
+        IndexDocument: 'index.html'
+        ErrorDocument: 'error.html'
+
   InsertFirstItemCustomResource:
     Type: Custom::InsertFirstItemFunction
     Properties:
       ServiceToken: !GetAtt InsertFirstItemLambda.Arn
       DYNAMODB_TABLE_NAME: !Ref DynamoDBTable
+
+  InjectThenUploadStaticContent:
+    Type: Custom::InjectThenUploadStaticContentFunction
+    Properties:
+      ServiceToken: !GetAtt InjectThenUploadStaticContentLambda.Arn
+      BUCKET_NAME: !Ref S3HostingBucket
+      API_ENDPOINT: !Sub "https://${VisitorDataHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+
+Outputs:
+  APIEndpoint:
+    Value: !Sub "https://${VisitorDataHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"
+  S3HostingBucket:
+    Value: !Ref S3HostingBucket
+  BucketWebsiteURL:
+    Value: !Sub "http://${S3HostingBucket}.s3-website-${AWS::Region}.amazonaws.com"

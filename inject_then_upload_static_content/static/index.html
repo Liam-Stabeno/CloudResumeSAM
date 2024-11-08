@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Liam Stabeno - Sales Engineer</title>
+    <link
+      href="https://fonts.googleapis.com/css?family=Josefin+Sans&subset=latin,latin-ext"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.rawgit.com/konpa/devicon/master/devicon.min.css"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+          <div class="title text-center">
+            <h1>Liam Stabeno</h1>
+            <h3>Sales Engineer</h3>
+            <h4>
+              <a href="mailto:liamstabeno@icloud.com">liamstabeno@icloud.com</a>
+            </h4>
+            <hr />
+            <ul class="list-inline">
+              <li><i class="devicon-laravel-plain colored"></i></li>
+              <li><i class="devicon-javascript-plain colored"></i></li>
+              <li><i class="devicon-html5-plain colored"></i></li>
+              <li><i class="devicon-angularjs-plain colored"></i></li>
+              <li><i class="devicon-linux-plain"></i></li>
+            </ul>
+          </div>
+
+          <div class="text-center">
+            <p>Page Views: <span id="pageViews">Loading...</span></p>
+            <p id="error-message" style="color: red"></p>
+          </div>
+
+          <!-- objective section -->
+          <div class="objective">
+            <h2 class="text-center">Objective</h2>
+            <p>
+              Position in a forward-thinking company where I can leverage my
+              technical expertise, problem-solving abilities, and strong
+              interpersonal sales skills to drive growth and success.
+            </p>
+          </div>
+          <div class="main-class">
+            <h3><u>Skills Summary</u></h3>
+            <ul>
+              <li>
+                <u>Customer-Centric Approach:</u> Proficient in assessing
+                customer needs and tailoring solutions to meet them effectively.
+              </li>
+              <li>
+                <u> Effective Communication:</u> Skilled in delivering
+                comprehensive demonstrations to illustrate the value-proposition
+                to both technical and non-technical prospects.
+              </li>
+              <li>
+                <u>Customer Relationship Management:</u> Skilled in customer
+                service, effective communication, interpersonal skills, and
+                problem-solving.
+              </li>
+              <li>
+                <u>Software Proficiency:</u> Proficient in a range of software,
+                including the Microsoft Office Product Suite, Apple iWork suite,
+                Salesforce, Slack, Notion, etc.
+              </li>
+              <li>
+                <u>Coding Skills:</u> Experience in various languages including
+                JavaScript (various libraries), Java, HTML and more.
+              </li>
+            </ul>
+          </div>
+
+          <!-- work experience section -->
+          <div class="main-class">
+            <h2 class="text-center">Work Experience</h2>
+            <div class="row experience-title">
+              <div class="col-md-9">
+                <h3>Retail Trader</h3>
+                <h4>Focus on S&P 500 Index Derivatives</h4>
+              </div>
+              <div class="col-md-3">
+                <h4>4/2020 – Present (fulltime in 2022)</h4>
+              </div>
+            </div>
+
+            <div class="row experience-title">
+              <div class="col-md-9">
+                <h3>Serverless Guru</h3>
+                <h4>Strategic Accounts</h4>
+                <h4>B2B Sales, Serverless Cloud Infrastructure, AWS APN</h4>
+              </div>
+              <div class="col-md-3">
+                <h3>1/2021 – 3/2022</h3>
+              </div>
+            </div>
+
+            <div class="row experience-title">
+              <div class="col-md-9">
+                <h3>Passport Online</h3>
+                <h4>Sales Executive</h4>
+                <h4>
+                  B2B Sales w/ Industry Suppliers, B2C Sales w/ Individual
+                  Travel Agents and Consotia
+                </h4>
+              </div>
+              <div class="col-md-3">
+                <h3>1/2019 – 7/2021</h3>
+              </div>
+            </div>
+
+            <div class="row experience-title">
+              <div class="col-md-9">
+                <h3>Frontend Web Developer</h3>
+                <h4>Feelance</h4>
+                <h4>Cutomized Retail WIX sites with JS</h4>
+              </div>
+              <div class="col-md-3">
+                <h3>9/2017 – Present</h3>
+              </div>
+            </div>
+          </div>
+
+          <div class="main-class">
+            <h3><u>Education</u></h3>
+            <ul>
+              <li>
+                <u>Epicodus Coding School:</u> Java/Android Track (2017) -
+                Portland, Oregon
+              </li>
+              <li>
+                <u> Circle in the Square Theatre School:</u> Professional
+                Conservatory (2006 - 2009) - New York, NY
+              </li>
+              <li>
+                <u>University of Victoria:</u> Economics (2000 - 2004) -
+                Victoria, B.C.
+              </li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <!-- add lambda trigger here -->
+    <script>
+      const apiUrl = "${ApiUrl}";
+          
+      async function sendUserAgent() {
+        const BrowserData = navigator.userAgent; // Collect User-Agent
+        try {
+          await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+            },
+            body: JSON.stringify({
+              userAgent: BrowserData,
+            }),
+          });
+        } catch (error) {
+          console.error("Error sending User-Agent: ", error);
+          document.getElementById("error-message").textContent =
+            "Error sending User-Agent.";
+        }
+      }
+
+      async function loadPageViews() {
+        try {
+          const response = await fetch(apiUrl, {
+            method: "GET",
+            headers: {
+              "content-type": "application/json",
+            },
+          });
+
+          const data = await response.json();
+          document.getElementById("pageViews").textContent =
+            data.TotalVisits || 0;
+        } catch (error) {
+          console.error("Error fetching page views:", error);
+          document.getElementById("pageViews").textContent =
+            "Error loading data";
+          document.getElementById("error-message").textContent =
+            "Error fetching page views.";
+        }
+      }
+
+      function delay(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      window.onload = async () => {
+        await loadPageViews();
+        await delay(1500); // Wait for 1.5 seconds
+        await sendUserAgent(); // Then send User-Agent
+      };
+    </script>
+  </body>
+</html>
