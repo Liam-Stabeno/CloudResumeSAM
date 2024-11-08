@@ -41,6 +41,9 @@ Resources:
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref DynamoDBTable
+      Environment:
+        Variables:
+          DYNAMODB_TABLE_NAME: !Ref DynamoDBTable
 
   InjectThenUploadStaticContentLambda:
     Type: AWS::Serverless::Function
@@ -85,6 +88,22 @@ Resources:
       WebsiteConfiguration:
         IndexDocument: 'index.html'
         ErrorDocument: 'error.html'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+  
+  S3HostingBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3HostingBucket
+      PolicyDocument:
+        Statement:
+          - Action: 's3:GetObject'
+            Effect: Allow
+            Resource: !Sub "arn:aws:s3:::${S3HostingBucket}/*"
+            Principal: '*'
 
   InsertFirstItemCustomResource:
     Type: Custom::InsertFirstItemFunction

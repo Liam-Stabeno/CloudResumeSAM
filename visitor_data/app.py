@@ -12,7 +12,7 @@ def lambda_handler(event, context):
     dynamodb = boto3.resource("dynamodb")
     table = dynamodb.Table(tableName)
     
-    method = event.get('httpMethod')
+    method = event["requestContext"]["http"]["method"]
     print(f"Tablename : {table}")
     if method == 'POST':
         page_id = str(uuid.uuid4())
@@ -39,6 +39,11 @@ def lambda_handler(event, context):
             
             return {
                 'statusCode': 200,
+                'headers': {
+                "Access-Control-Allow-Headers" : "Content-Type",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+                },
                 'body': json.dumps({
                     'message': f'Updated total visits: {visitcount}',
                     'item_inserted': item_to_insert  
@@ -57,8 +62,13 @@ def lambda_handler(event, context):
             visitcount = int(response["Items"][0].get("TotalVisits", 0)) if response["Items"] else 0
             return {
                 'statusCode': 200,
+                'headers': {
+                "Access-Control-Allow-Headers" : "Content-Type",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+                },
                 'body': json.dumps({
-                    'TotalVisits': visitcount 
+                    'TotalVisits': visitcount
                 })
             }  
 
@@ -70,5 +80,10 @@ def lambda_handler(event, context):
     else:
         return {
             'statusCode': 200,
-            'body': 'Neither POST nor GET'
+            'headers': {
+            "Access-Control-Allow-Headers" : "Content-Type",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+            },
+            'body': json.dumps(event)
         }

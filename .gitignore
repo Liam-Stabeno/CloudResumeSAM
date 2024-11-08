@@ -237,6 +237,9 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# SAM 
+.aws-sam
+samconfig.toml
 # Build folder
 
 */build/*
