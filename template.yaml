@@ -125,3 +125,9 @@ Outputs:
     Value: !Sub "${S3HostingBucket}.s3-website-${AWS::Region}.amazonaws.com"
   BucketWebsiteURL:
     Value: !Sub "http://${S3HostingBucket}.s3-website-${AWS::Region}.amazonaws.com"
+  StackName:
+    Value: !Sub "${AWS::StackName}"
+  DynamoDBTableName:
+    Value: !Sub "${DynamoDBTable}"
+  DynammoDBTableARN:
+    Value: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTable}"
