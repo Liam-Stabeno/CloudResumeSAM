@@ -1,6 +1,25 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Cloud Resume Challege App - Updates DynamoDB table with a count of the total visitors that have visited an index.html page hosted in an S3
+
+Parameters:
+  ACMCertificateArn:
+    Type: String
+    Default: arn:aws:acm:us-east-1:952977564466:certificate/57058537-78cd-4d7f-a7ff-0a0fe5d7b2de
+    Description: ARN of the ACM certificate to use for the CloudFront distribution.
+  HostedZoneId: 
+    Type: String
+    Default: Z02431631RGVM7IKH1DSE
+    Description: Route53 Hosted Zone ID to use for the CloudFront distribution.
+  DomainName:
+    Type: String
+    Default: liamstabeno.com
+    Description: Domain name to use for the CloudFront distribution.
+  S3BucketName:
+    Type: String
+    Default: cloud-resume-website
+    Description: Name of the S3 bucket to use for the CloudFront distribution - must be lowercase.
+
 Resources:
   VisitorDataLambda:
     Type: AWS::Serverless::Function
@@ -70,7 +89,8 @@ Resources:
         - POST
         - OPTIONS
         AllowOrigins:
-        - '*'
+        - !Sub "https://${DomainName}"
+        - !Sub "https://${S3HostingBucket}.s3-website-${AWS::Region}.amazonaws.com"
 
   
   DynamoDBTable:
@@ -81,10 +101,68 @@ Resources:
         Name: PageId
         Type: String
 
+  InsertFirstItemCustomResource:
+    Type: Custom::InsertFirstItemFunction
+    Properties:
+      ServiceToken: !GetAtt InsertFirstItemLambda.Arn
+      DYNAMODB_TABLE_NAME: !Ref DynamoDBTable
+
+  InjectThenUploadStaticContent:
+    Type: Custom::InjectThenUploadStaticContentFunction
+    Properties:
+      ServiceToken: !GetAtt InjectThenUploadStaticContentLambda.Arn
+      BUCKET_NAME: !Ref S3HostingBucket
+      API_ENDPOINT: !Sub "https://${VisitorDataHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Aliases:
+          - !Sub "${DomainName}"
+        Origins:
+          - DomainName: !GetAtt S3HostingBucket.RegionalDomainName
+            Id: S3HostingBucket
+            S3OriginConfig: {}
+        DefaultRootObject: 'index.html'
+        ViewerCertificate:
+          AcmCertificateArn: "arn:aws:acm:us-east-1:952977564466:certificate/57058537-78cd-4d7f-a7ff-0a0fe5d7b2de"
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+        DefaultCacheBehavior:
+          TargetOriginId: S3HostingBucket
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          Compress: true
+          ForwardedValues:
+            QueryString: false
+        PriceClass: PriceClass_100
+        HttpVersion: http2
+        IPV6Enabled: true
+        
+
+  Route53Record:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Sub "${HostedZoneId}"
+      Name:  !Sub "${DomainName}"
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt CloudFrontDistribution.DomainName
+        HostedZoneId: "Z2FDTNDATAQYW2"
+
   S3HostingBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "${AWS::StackName}-s3-hosting-bucket"
+      BucketName: !Sub "${S3BucketName}-${AWS::Region}"
       WebsiteConfiguration:
         IndexDocument: 'index.html'
         ErrorDocument: 'error.html'
@@ -105,18 +183,6 @@ Resources:
             Resource: !Sub "arn:aws:s3:::${S3HostingBucket}/*"
             Principal: '*'
 
-  InsertFirstItemCustomResource:
-    Type: Custom::InsertFirstItemFunction
-    Properties:
-      ServiceToken: !GetAtt InsertFirstItemLambda.Arn
-      DYNAMODB_TABLE_NAME: !Ref DynamoDBTable
-
-  InjectThenUploadStaticContent:
-    Type: Custom::InjectThenUploadStaticContentFunction
-    Properties:
-      ServiceToken: !GetAtt InjectThenUploadStaticContentLambda.Arn
-      BUCKET_NAME: !Ref S3HostingBucket
-      API_ENDPOINT: !Sub "https://${VisitorDataHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
 
 Outputs:
   APIEndpoint:
@@ -124,10 +190,12 @@ Outputs:
   S3HostingBucketName:
     Value: !Sub "${S3HostingBucket}.s3-website-${AWS::Region}.amazonaws.com"
   BucketWebsiteURL:
-    Value: !Sub "http://${S3HostingBucket}.s3-website-${AWS::Region}.amazonaws.com"
+    Value: !Sub "https://${S3HostingBucket}.s3-website-${AWS::Region}.amazonaws.com"
   StackName:
     Value: !Sub "${AWS::StackName}"
   DynamoDBTableName:
     Value: !Sub "${DynamoDBTable}"
   DynammoDBTableARN:
     Value: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTable}"
+  WebsiteURL:
+    Value: !Sub "https://${DomainName}"
